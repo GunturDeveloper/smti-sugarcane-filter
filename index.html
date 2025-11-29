@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Biofilter Ampas Tebu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    .glass{
+      background:rgba(255,255,255,0.1);
+      backdrop-filter:blur(14px);
+      border:1px solid rgba(255,255,255,0.12);
+    }
+     .glassx{
+      background:rgba(0,0,0,1);
+      
+      border:1px solid rgba(255,255,255,0.12);
+    }
+    body{
+      background:#0f172a;
+      min-height:100vh;
+      overflow-x:hidden;
+      color:#f1f5f9;
+    }
+    .animate-fade-up{
+      animation:fadeUp .7s ease-out forwards;
+      opacity:0;
+    }
+    @keyframes fadeUp{
+      from{opacity:0;transform:translateY(20px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    .popup-bg{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.55);
+      backdrop-filter:blur(6px);
+      display:none;
+      justify-content:center;
+      align-items:center;
+      z-index:999;
+    }
+    .popup{
+      width:90%;
+      max-width:420px;
+    }
+  </style>
+</head>
+
+<body class="text-gray-100">
+
+<header class="text-center py-12">
+  <h1 class="text-4xl font-black">Smart Biofilter Ampas Tebu</h1>
+  <p class="mt-2 text-emerald-300 text-lg">Air Quality Monitoring + Auto Filter Alert</p>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-6">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <div class="space-y-8 animate-fade-up">
+
+      <div class="glass rounded-3xl p-8 text-center">
+        <h3 class="text-xl font-bold mb-4 flex items-center justify-center gap-2">
+          <i class="fas fa-wind text-emerald-400"></i> AQI
+        </h3>
+        <div class="text-7xl font-black" id="aqi">48</div>
+        <div class="text-xl mt-1 text-emerald-300">Baik</div>
+      </div>
+
+      <div class="glass rounded-3xl p-8 text-center">
+        <h3 class="text-xl font-bold mb-4 flex items-center justify-center gap-2">
+          <i class="fas fa-smog text-emerald-400"></i> PM2.5
+        </h3>
+        <div class="text-6xl font-black" id="pm25">12.4</div>
+        <span class="opacity-80">µg/m³</span>
+      </div>
+
+      <div class="glass rounded-3xl p-8">
+        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+          <i class="fas fa-filter text-emerald-400"></i> Status Filter
+        </h3>
+        <div class="text-5xl font-black mb-4" id="filterPercent">68%</div>
+        <div class="w-full bg-white bg-opacity-10 rounded-full h-6 overflow-hidden">
+          <div id="filterBar" class="h-full rounded-full transition-all duration-700"
+               style="width:68%;background:linear-gradient(90deg,#10b981,#f59e0b,#ef4444)"></div>
+        </div>
+        <p class="mt-3 text-lg opacity-90" id="filterText">Segera siapkan filter baru</p>
+      </div>
+
+    </div>
+
+    <div class="lg:col-span-2 space-y-8">
+
+      <div class="glass rounded-3xl p-8">
+        <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+          <i class="fas fa-chart-line text-emerald-400"></i> Grafik PM2.5 (24 Jam)
+        </h3>
+        <canvas id="pmChart" class="max-h-96"></canvas>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="glass rounded-3xl p-6 text-center">
+          <i class="fas fa-temperature-high text-4xl mb-2 text-cyan-300"></i>
+          <div class="text-3xl font-black" id="temp">28.5°C</div>
+          <div class="text-sm opacity-80">Suhu</div>
+        </div>
+        <div class="glass rounded-3xl p-6 text-center">
+          <i class="fas fa-tint text-4xl mb-2 text-blue-300"></i>
+          <div class="text-3xl font-black" id="hum">64%</div>
+          <div class="text-sm opacity-80">Kelembapan</div>
+        </div>
+        <div class="glass rounded-3xl p-6 text-center">
+          <i class="fas fa-clock text-4xl mb-2 text-amber-300"></i>
+          <div class="text-3xl font-black" id="uptime">127</div>
+          <div class="text-sm opacity-80">Hari</div>
+        </div>
+        <div class="glass rounded-3xl p-6 text-center">
+          <i class="fas fa-leaf text-4xl mb-2 text-green-400"></i>
+          <div class="text-3xl font-black">100%</div>
+          <div class="text-sm opacity-80">Eco Friendly</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<div id="warningPopup" class="popup-bg">
+  <div class="glassx popup rounded-3xl p-8 text-center animate-fade-up">
+    <i class="fas fa-exclamation-triangle text-6xl text-red-400 mb-4"></i>
+    <h3 class="text-2xl font-black mb-2">FILTER HARUS DIGANTI!</h3>
+    <p class="opacity-80 mb-6">Ganti filter sekarang lalu tekan reset.</p>
+
+    <button onclick="resetFilter()" class="w-full bg-red-500 text-white py-4 rounded-2xl font-bold mb-3">
+      Reset Filter
+    </button>
+
+    <button onclick="closePopup()" class="w-full bg-white bg-opacity-10 py-3 rounded-2xl font-semibold">
+      Tutup
+    </button>
+  </div>
+</div>
+
+<script>
+  const randomData=()=> (Math.random()*20+8).toFixed(1);
+
+  const ctx=document.getElementById('pmChart').getContext('2d');
+  const chart=new Chart(ctx,{
+    type:'line',
+    data:{labels:[],datasets:[{
+      label:'PM2.5',
+      data:[],
+      borderColor:'#34d399',
+      backgroundColor:'rgba(52,211,153,0.15)',
+      fill:true,
+      tension:.4,
+      pointBackgroundColor:'#34d399',
+      pointRadius:3
+    }]},
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#ddd'},grid:{color:'rgba(255,255,255,0.1)'}},
+        y:{ticks:{color:'#ddd'},grid:{color:'rgba(255,255,255,0.1)'},beginAtZero:true}
+      }
+    }
+  });
+
+  function updateAll(){
+    let pm25=randomData();
+    let aqi=Math.round(pm25*2.5);
+    let filterPercent=Math.min(99,70+Math.random()*30).toFixed(0);
+
+    document.getElementById("pm25").innerText=pm25;
+    document.getElementById("aqi").innerText=aqi;
+    document.getElementById("filterPercent").innerText=filterPercent+"%";
+    document.getElementById("filterBar").style.width=filterPercent+"%";
+
+    if(filterPercent<50){
+      filterText.innerText="Filter masih baik";
+      filterBar.style.background="#10b981";
+    }else if(filterPercent<85){
+      filterText.innerText="Segera siapkan filter baru";
+      filterBar.style.background="#f59e0b";
+    }else{
+      filterText.innerText="FILTER SUDAH KOTOR!";
+      filterBar.style.background="#ef4444";
+      document.getElementById("warningPopup").style.display="flex";
+    }
+
+    chart.data.labels.push(new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));
+    chart.data.labels=chart.data.labels.slice(-30);
+    chart.data.datasets[0].data.push(pm25);
+    chart.data.datasets[0].data=chart.data.datasets[0].data.slice(-30);
+    chart.update();
+  }
+
+  function resetFilter(){
+    document.getElementById("warningPopup").style.display="none";
+    alert("Filter direset!");
+  }
+  function closePopup(){
+    document.getElementById("warningPopup").style.display="none";
+  }
+
+  setInterval(updateAll,5000);
+  updateAll();
+</script>
+
+</body>
+</html>
